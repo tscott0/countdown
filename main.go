@@ -7,6 +7,8 @@ import (
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/tscott0/countdown/combi"
 )
 
 const (
@@ -30,6 +32,12 @@ func main() {
 	// TODO: Iterate over permutations/combinations of letters in reverse length order
 	// heapPermutation(strings.Split(guess, ""), len(guess))
 
+	for i := MinWordLen; i <= MaxWordLen; i++ {
+		for _ = range combi.Combinations(i) {
+
+		}
+	}
+
 	testWord := "POST"
 
 	g, err := guess(testWord, dict)
@@ -41,9 +49,9 @@ func main() {
 		fmt.Printf("%v found\n", testWord)
 	}
 
-//	for _, w := range perms {
-//		fmt.Println(w)
-//	}
+	//	for _, w := range perms {
+	//		fmt.Println(w)
+	//	}
 
 }
 
@@ -106,4 +114,3 @@ func hashWord(w string) string {
 	sort.Strings(sorted)
 	return strings.Join(sorted, "")
 }
-
