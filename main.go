@@ -1,31 +1,104 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
+	"os"
 	"sort"
 	"strings"
+)
+
+const (
+	MinWordLen int = 3
+	MaxWordLen int = 9
 )
 
 func main() {
 
 	// dict is indexed by the word length then by word
 	// this allows searching by longest word first
-	dict := make(map[int]map[string]struct{})
+	dict := make(map[int]map[string][]string)
 
-	dict[3] = make(map[string]struct{})
-	var es struct{}
-	dict[3]["OPT"] = es
-	dict[3]["POT"] = es
-	dict[3]["TOP"] = es
-
-	//fmt.Println(hashWord("POT"))
-	//fmt.Println(hashWord("TOP"))
-
-	guess := "PTO"
-	if _, ok := dict[len(guess)][guess]; ok {
-		fmt.Printf("%s is a valid word\n", guess)
+	// Make all the inner maps
+	for i := MinWordLen; i <= MaxWordLen; i++ {
+		dict[i] = make(map[string][]string)
 	}
 
+	buildDict("words-en-gb", dict)
+
+	// TODO: Iterate over permutations/combinations of letters in reverse length order
+	// heapPermutation(strings.Split(guess, ""), len(guess))
+
+	testWord := "POST"
+
+	g, err := guess(testWord, dict)
+	if err != nil {
+		fmt.Println(err)
+	}
+
+	if g {
+		fmt.Printf("%v found\n", testWord)
+	}
+
+//	for _, w := range perms {
+//		fmt.Println(w)
+//	}
+
+}
+
+func guess(guess string, dict map[int]map[string][]string) (bool, error) {
+	hashedGuess := hashWord(guess)
+
+	fmt.Printf("Searching for %s using %s\n", guess, hashedGuess)
+
+	// Check if the hash of the word exists first
+	if words, ok := dict[len(hashedGuess)][hashedGuess]; ok {
+		fmt.Printf("Hash of %s found in %v\n", guess, dict[len(hashedGuess)][hashedGuess])
+		// Then iterate over valid anagrams of the hash
+		for _, w := range words {
+			if w == guess {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
+// Read the local dictionary file and populate the dictionary
+func buildDict(filename string, dict map[int]map[string][]string) error {
+
+	file, err := os.Open(filename)
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	reader := bufio.NewReader(file)
+
+	for {
+		lineBytes, _, err := reader.ReadLine()
+		if err == io.EOF {
+			break
+		}
+
+		line := strings.ToUpper(string(lineBytes))
+		hashed := hashWord(line)
+
+		// Only store words of valid length
+		if len(line) >= MinWordLen && len(line) <= MaxWordLen {
+			if words, ok := dict[len(hashed)][hashed]; ok {
+				// If the hash already exists then append the word
+				dict[len(hashed)][hashed] = append(words, line)
+			} else {
+				// Insert it otherwise
+				dict[len(hashed)][hashed] = []string{line}
+			}
+		}
+	}
+
+	return nil
 }
 
 func hashWord(w string) string {
@@ -33,3 +106,4 @@ func hashWord(w string) string {
 	sort.Strings(sorted)
 	return strings.Join(sorted, "")
 }
+
