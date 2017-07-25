@@ -4,10 +4,13 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"log"
+	"net/http"
 	"os"
 	"sort"
 	"strings"
 
+	"github.com/gorilla/mux"
 	"github.com/tscott0/countdown/combi"
 )
 
@@ -29,6 +32,10 @@ func main() {
 	}
 
 	buildDict("words-en-gb", dict)
+
+	router := NewRouter()
+
+	log.Fatal(http.ListenAndServe(":8080", router))
 
 	// TODO: Iterate over permutations/combinations of letters in reverse length order
 	// heapPermutation(strings.Split(guess, ""), len(guess))
@@ -107,4 +114,11 @@ func hashWord(w string) string {
 	sorted := strings.Split(w, "")
 	sort.Strings(sorted)
 	return strings.Join(sorted, "")
+}
+
+func LettersShow(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	letters := vars["letters"]
+	fmt.Println(vars)
+	fmt.Fprintln(w, "Solving: ", letters)
 }
