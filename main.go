@@ -14,6 +14,7 @@ import (
 const (
 	MinWordLen int = 3
 	MaxWordLen int = 9
+	MaxAnswers int = 10
 )
 
 func main() {
@@ -32,45 +33,38 @@ func main() {
 	// TODO: Iterate over permutations/combinations of letters in reverse length order
 	// heapPermutation(strings.Split(guess, ""), len(guess))
 
-	for i := MinWordLen; i <= MaxWordLen; i++ {
-		for _ = range combi.Combinations(i) {
+	letters := strings.Split("GYHDNOEUR", "")
+	guesses := []string{}
 
+	// TODO: Improve by iterating over longest words first
+	for _, c := range combi.Combinations(len(letters)) {
+		currentGuess := ""
+
+		for _, x := range c {
+			currentGuess = currentGuess + letters[x]
+		}
+
+		if len(currentGuess) >= MinWordLen {
+			guesses = append(guesses, currentGuess)
 		}
 	}
 
-	testWord := "POST"
+	var a answers = []string{}
 
-	g, err := guess(testWord, dict)
-	if err != nil {
-		fmt.Println(err)
-	}
-
-	if g {
-		fmt.Printf("%v found\n", testWord)
-	}
-
-	//	for _, w := range perms {
-	//		fmt.Println(w)
-	//	}
-
-}
-
-func guess(guess string, dict map[int]map[string][]string) (bool, error) {
-	hashedGuess := hashWord(guess)
-
-	fmt.Printf("Searching for %s using %s\n", guess, hashedGuess)
-
-	// Check if the hash of the word exists first
-	if words, ok := dict[len(hashedGuess)][hashedGuess]; ok {
-		fmt.Printf("Hash of %s found in %v\n", guess, dict[len(hashedGuess)][hashedGuess])
-		// Then iterate over valid anagrams of the hash
-		for _, w := range words {
-			if w == guess {
-				return true, nil
+	for _, g := range guesses {
+		h := hashWord(g)
+		if _, found := dict[len(h)][h]; found {
+			for _, perm := range dict[len(h)][h] {
+				a = append(a, perm)
 			}
 		}
 	}
-	return false, nil
+
+	// Sort by word length so we can take the best answers
+	sort.Sort(a)
+
+	fmt.Println(a[len(a)-MaxAnswers:])
+
 }
 
 // Read the local dictionary file and populate the dictionary
