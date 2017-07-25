@@ -20,12 +20,11 @@ const (
 	MaxAnswers int = 10
 )
 
+// dict is indexed by the word length then by word
+// this allows searching by longest word first
+var dict = make(map[int]map[string][]string)
+
 func main() {
-
-	// dict is indexed by the word length then by word
-	// this allows searching by longest word first
-	dict := make(map[int]map[string][]string)
-
 	// Make all the inner maps
 	for i := MinWordLen; i <= MaxWordLen; i++ {
 		dict[i] = make(map[string][]string)
@@ -40,7 +39,10 @@ func main() {
 	// TODO: Iterate over permutations/combinations of letters in reverse length order
 	// heapPermutation(strings.Split(guess, ""), len(guess))
 
-	letters := strings.Split("GYHDNOEUR", "")
+}
+
+func solveLetters(l string, dict map[int]map[string][]string) []string {
+	letters := strings.Split(strings.ToUpper(l), "")
 	guesses := []string{}
 
 	// TODO: Improve by iterating over longest words first
@@ -56,13 +58,16 @@ func main() {
 		}
 	}
 
-	var a answers = []string{}
+	a := answers{
+		[]string{},
+		make(map[string]struct{}),
+	}
 
 	for _, g := range guesses {
 		h := hashWord(g)
-		if _, found := dict[len(h)][h]; found {
-			for _, perm := range dict[len(h)][h] {
-				a = append(a, perm)
+		if c, found := dict[len(h)][h]; found {
+			for _, perm := range c {
+				a.Insert(perm)
 			}
 		}
 	}
@@ -70,8 +75,7 @@ func main() {
 	// Sort by word length so we can take the best answers
 	sort.Sort(a)
 
-	fmt.Println(a[len(a)-MaxAnswers:])
-
+	return a.TopWords()
 }
 
 // Read the local dictionary file and populate the dictionary
@@ -120,5 +124,5 @@ func LettersShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	letters := vars["letters"]
 	fmt.Println(vars)
-	fmt.Fprintln(w, "Solving: ", letters)
+	fmt.Fprintln(w, "Solving: ", solveLetters(letters, dict))
 }
