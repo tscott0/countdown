@@ -27,8 +27,8 @@ func (a *answers) Insert(w string) {
 }
 
 func (a answers) TopWords() []string {
-	if len(a.words) < MaxAnswers {
+	if len(a.words) < maxAnswers {
 		return a.words
 	}
-	return a.words[len(a.words)-MaxAnswers:]
+	return a.words[len(a.words)-maxAnswers:]
 }

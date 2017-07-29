@@ -7,17 +7,14 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"sort"
 	"strings"
+	"time"
 
 	"github.com/gorilla/mux"
-	"github.com/tscott0/countdown/combi"
 )
 
 const (
-	MinWordLen int = 3
-	MaxWordLen int = 9
-	MaxAnswers int = 10
+	dictionaryFile string = "words-en-gb"
 )
 
 // dict is indexed by the word length then by word
@@ -26,64 +23,28 @@ var dict = make(map[int]map[string][]string)
 
 func main() {
 	// Make all the inner maps
-	for i := MinWordLen; i <= MaxWordLen; i++ {
+	for i := minWordLen; i <= maxWordLen; i++ {
 		dict[i] = make(map[string][]string)
 	}
 
-	buildDict("words-en-gb", dict)
-
-	router := NewRouter()
-
-	log.Fatal(http.ListenAndServe(":8080", router))
-
-	// TODO: Iterate over permutations/combinations of letters in reverse length order
-	// heapPermutation(strings.Split(guess, ""), len(guess))
-
-}
-
-func solveLetters(l string, dict map[int]map[string][]string) []string {
-	letters := strings.Split(strings.ToUpper(l), "")
-	guesses := []string{}
-
-	// TODO: Improve by iterating over longest words first
-	for _, c := range combi.Combinations(len(letters)) {
-		currentGuess := ""
-
-		for _, x := range c {
-			currentGuess = currentGuess + letters[x]
-		}
-
-		if len(currentGuess) >= MinWordLen {
-			guesses = append(guesses, currentGuess)
-		}
+	if err := readDict(dictionaryFile, dict); err != nil {
+		log.Fatalf("couldn't read dictionary file %q: %v", dictionaryFile, err)
 	}
 
-	a := answers{
-		[]string{},
-		make(map[string]struct{}),
+	router := newRouter()
+
+	if err := http.ListenAndServe(":8080", router); err != nil {
+		log.Fatal(err)
 	}
-
-	for _, g := range guesses {
-		h := hashWord(g)
-		if c, found := dict[len(h)][h]; found {
-			for _, perm := range c {
-				a.Insert(perm)
-			}
-		}
-	}
-
-	// Sort by word length so we can take the best answers
-	sort.Sort(a)
-
-	return a.TopWords()
 }
 
 // Read the local dictionary file and populate the dictionary
-func buildDict(filename string, dict map[int]map[string][]string) error {
+func readDict(filename string, dict map[int]map[string][]string) error {
+	t0 := time.Now()
 
 	file, err := os.Open(filename)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	defer file.Close()
@@ -100,7 +61,7 @@ func buildDict(filename string, dict map[int]map[string][]string) error {
 		hashed := hashWord(line)
 
 		// Only store words of valid length
-		if len(line) >= MinWordLen && len(line) <= MaxWordLen {
+		if len(line) >= minWordLen && len(line) <= maxWordLen {
 			if words, ok := dict[len(hashed)][hashed]; ok {
 				// If the hash already exists then append the word
 				dict[len(hashed)][hashed] = append(words, line)
@@ -111,18 +72,15 @@ func buildDict(filename string, dict map[int]map[string][]string) error {
 		}
 	}
 
+	t1 := time.Now()
+	fmt.Printf("Processed dictionary file %q in %v\n", filename, t1.Sub(t0))
+
 	return nil
 }
 
-func hashWord(w string) string {
-	sorted := strings.Split(w, "")
-	sort.Strings(sorted)
-	return strings.Join(sorted, "")
-}
-
-func LettersShow(w http.ResponseWriter, r *http.Request) {
+func lettersShow(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	letters := vars["letters"]
 	fmt.Println(vars)
-	fmt.Fprintln(w, "Solving: ", solveLetters(letters, dict))
+	fmt.Fprintln(w, "Solving: ", letters.Solve(letters, dict))
 }
