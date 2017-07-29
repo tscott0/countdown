@@ -1,4 +1,4 @@
-package main
+package letters
 
 type answers struct {
 	words  []string
@@ -26,9 +26,9 @@ func (a *answers) Insert(w string) {
 	}
 }
 
-func (a answers) TopWords() []string {
-	if len(a.words) < maxAnswers {
+func (a answers) Top(n int) []string {
+	if len(a.words) < n {
 		return a.words
 	}
-	return a.words[len(a.words)-maxAnswers:]
+	return a.words[len(a.words)-n:]
 }
