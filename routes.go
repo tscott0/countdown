@@ -22,7 +22,13 @@ func newRouter() *mux.Router {
 			"LettersGame",
 			"GET",
 			"/letters/{letters}",
-			lettersShow,
+			lettersHandler,
+		},
+		route{
+			"NumbersGame",
+			"GET",
+			"/numbers/{numbers}",
+			numbersHandler,
 		},
 	}
 

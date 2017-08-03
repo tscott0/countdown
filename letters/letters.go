@@ -75,7 +75,6 @@ func ReadDict(filename string) error {
 // Solve will find all possible words that can be formed from a string
 // of letters without replacement.
 func Solve(l string) ([]string, time.Duration, error) {
-
 	var top []string
 	var duration time.Duration
 

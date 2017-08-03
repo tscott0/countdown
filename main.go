@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/tscott0/countdown/letters"
+	"github.com/tscott0/countdown/numbers"
 )
 
 const (
@@ -25,7 +27,7 @@ func main() {
 	}
 }
 
-func lettersShow(w http.ResponseWriter, r *http.Request) {
+func lettersHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	l := vars["letters"]
 
@@ -34,7 +36,23 @@ func lettersShow(w http.ResponseWriter, r *http.Request) {
 		log.Fatalf("failed to solve %q: %v", l, err)
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	w.Header().Add("Content-Type", "application/json")
+
+	fmt.Fprintln(w, resp)
+}
+
+func numbersHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	n := vars["numbers"]
+
+	a := strings.Split(n, ",")
+
+	resp, err := numbers.SolveJSON(a)
+	if err != nil {
+		log.Fatalf("failed to solve %q: %v", n, err)
+	}
+
+	w.Header().Add("Content-Type", "application/json")
 
 	fmt.Fprintln(w, resp)
 }
