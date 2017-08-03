@@ -5,7 +5,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tscott0/countdown/combi"
 	"github.com/tscott0/countdown/perms"
 )
 
@@ -20,21 +19,13 @@ type failure struct {
 	Error string `json:"error"`
 }
 
-func Solve(numbers []int) (string, time.Duration, error) {
+func Solve(numbers []int, target int) (Guess, time.Duration, error) {
 	var duration time.Duration
-	var closest guess
+	var closest Guess
 
-	// TODO: Handle invalid numbers length here
-
-	// Take first number as the target
-	target := numbers[0]
-	numbers = numbers[1:]
-
-	//fmt.Println(numbers)
 	t0 := time.Now()
 
-	// TODO: USE PERMS NOT COMBIS YOU IDIOT
-	for _, c := range combi.Combinations(len(numbers)) {
+	for _, c := range perms.Permutations(len(numbers)) {
 		var currentCombi []int
 
 		for _, x := range c {
@@ -48,11 +39,11 @@ func Solve(numbers []int) (string, time.Duration, error) {
 
 		for _, opGroups := range operatorPerms {
 
-			var g guess
+			var g Guess
 			g.newGuess(currentCombi[0])
 
 			if len(opGroups) != len(currentCombi)-1 {
-				return closest.string(), duration, fmt.Errorf("operators and operands do not match")
+				return closest, duration, fmt.Errorf("operators and operands do not match")
 			}
 
 			for i := 0; i < len(opGroups); i++ {
@@ -68,7 +59,7 @@ func Solve(numbers []int) (string, time.Duration, error) {
 				duration = t1.Sub(t0)
 
 				fmt.Printf("Solved after %v: %v = %v\n", duration, closest.string(), closest.total())
-				return closest.string(), duration, nil
+				return closest, duration, nil
 			}
 		}
 	}
@@ -77,13 +68,15 @@ func Solve(numbers []int) (string, time.Duration, error) {
 	duration = t1.Sub(t0)
 
 	fmt.Printf("Closest after %v: %v = %v\n", duration, closest.string(), closest.total())
-	return closest.string(), duration, nil
+	return closest, duration, nil
 }
 
 // SolveJSON produces a JSON string containing
 func SolveJSON(numbers []string) (string, error) {
 
 	var castedNumbers []int
+
+	// TODO: Handle invalid numbers length here
 
 	for _, n := range numbers {
 		cast, err := strconv.ParseInt(n, 10, 64)
@@ -95,9 +88,16 @@ func SolveJSON(numbers []string) (string, error) {
 		castedNumbers = append(castedNumbers, int(cast))
 	}
 
-	a, d, err := Solve(castedNumbers)
+	// Take first number as the target
+	target := castedNumbers[0]
+	castedNumbers = castedNumbers[1:]
 
+	a, d, err := Solve(castedNumbers, target)
+
+	// TODO
 	_, _ = d, err
 
-	return a, nil
+	s := a.string() + " = " + strconv.Itoa(a.total())
+
+	return s, nil
 }

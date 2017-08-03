@@ -1,21 +1,20 @@
 package numbers
 
 import (
-	"fmt"
 	"strconv"
 )
 
-type guess struct {
+type Guess struct {
 	operands  []int
 	operators []string
 }
 
-func (g *guess) newGuess(i int) {
+func (g *Guess) newGuess(i int) {
 	g.operands = []int{i}
 	g.operators = []string{}
 }
 
-func (g *guess) total() int {
+func (g *Guess) total() int {
 	if len(g.operands) < 1 {
 		return 0
 	}
@@ -40,7 +39,7 @@ func (g *guess) total() int {
 	return total
 }
 
-func (g *guess) string() string {
+func (g *Guess) string() string {
 	if len(g.operands) < 1 {
 		return ""
 	}
@@ -66,26 +65,28 @@ func (g *guess) string() string {
 }
 
 // Returns false if a division returns a non-integer
-func (g *guess) insert(i int, op string) bool {
-	// TODO: check that op is a valid operator
+func (g *Guess) insert(i int, op string) bool {
+	// when dividing the result must be an integer
+	if op == "/" && g.total()%i != 0 {
+		return false
+	}
 
 	g.operands = append(g.operands, i)
 	g.operators = append(g.operators, op)
 
 	return true
-	// TODO: division check
 }
 
-func (g *guess) bestGuess(newGuess guess, target int) {
+func (g *Guess) bestGuess(newGuess Guess, target int) {
 	// Replace a nil pointer the first time
 	if g == nil {
 		*g = newGuess
 		return
 	}
 
-	fmt.Printf("%v = %v vs %v = %v\n",
-		g.string(), g.total(),
-		newGuess.string(), newGuess.total())
+	//fmt.Printf("%v = %v vs %v = %v\n",
+	//	g.string(), g.total(),
+	//	newGuess.string(), newGuess.total())
 
 	newToTarget := target - newGuess.total()
 	if newToTarget < 0 {
