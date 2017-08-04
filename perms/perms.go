@@ -1,15 +1,16 @@
 package perms
 
+import (
+	"fmt"
+
+	"github.com/tscott0/countdown/combi"
+)
+
 func Permutations(n int) [][]int {
 	t := [][]int{}
 
-	var data []int
-	for i := 0; i < n; i++ {
-		data = append(data, i)
-	}
-
-	for j := 1; j <= len(data); j++ {
-		heapPermutation(&t, data, j)
+	for _, c := range combi.Combinations(n) {
+		heapPermutation(&t, c, len(c))
 	}
 
 	return t
@@ -36,7 +37,39 @@ func heapPermutation(perms *[][]int, w []int, size int) {
 	}
 }
 
+// Permutations with repeats
+func PermRep(n int, values []string) [][]string {
+	pn := make([]int, n)
+	p := make([]string, n)
+	r := make([][]string, 0)
+	for {
+		// generate permutaton
+		for i, x := range pn {
+			p[i] = values[x]
+		}
+
+		new := make([]string, len(p))
+		copy(new, p)
+		r = append(r, new)
+
+		// increment permutation number
+		for i := 0; ; {
+			pn[i]++
+			if pn[i] < len(values) {
+				break
+			}
+			pn[i] = 0
+			i++
+			if i == n {
+				return r
+			}
+		}
+	}
+}
+
+// Combinations with repeats
 func Combrep(n int, lst []string) [][]string {
+	fmt.Printf("Combrep(n=%v, lst=%v)\n", n, lst)
 	if n == 0 {
 		return [][]string{nil}
 	}
@@ -44,6 +77,7 @@ func Combrep(n int, lst []string) [][]string {
 		return nil
 	}
 	r := Combrep(n, lst[1:])
+	fmt.Println("MIDDLE")
 	for _, x := range Combrep(n-1, lst) {
 		r = append(r, append(x, lst[0]))
 	}

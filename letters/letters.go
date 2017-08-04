@@ -158,7 +158,7 @@ func SolveJSON(l string) (string, error) {
 		d.String(),
 	}
 
-	b, err := json.Marshal(s)
+	b, err := json.MarshalIndent(s, "", "   ")
 	if err != nil {
 		return "", fmt.Errorf("failed to marshal JSON: %v", err)
 	}

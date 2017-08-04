@@ -1,6 +1,7 @@
 package numbers
 
 import (
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"time"
@@ -11,31 +12,51 @@ import (
 var ops = []string{"+", "-", "*", "/"}
 
 type success struct {
-	Words []string `json:"words"`
-	Took  string   `json:"took"`
+	Solved  bool   `json:"solved"`
+	Formula string `json:"formula"`
+	Total   int    `json:"total"`
+	Score   int    `json:"score"`
+	Took    string `json:"took"`
 }
 
 type failure struct {
 	Error string `json:"error"`
 }
 
-func Solve(numbers []int, target int) (Guess, time.Duration, error) {
-	var duration time.Duration
+func Solve(operands []int, target int) (Guess, time.Duration, error) {
 	var closest Guess
+	var duration time.Duration
+
+	// check for too many operands
+	if len(operands) > 6 {
+		return closest, duration, fmt.Errorf("the maximum number of operands is 6")
+	}
+
+	// check for too many operands
+	if len(operands) < 2 {
+		return closest, duration, fmt.Errorf("the minimum number of operands is 2")
+	}
+
+	if target < 101 || target > 999 {
+		return closest, duration, fmt.Errorf("the target must be between 101 and 999 inclusive")
+	}
 
 	t0 := time.Now()
 
-	for _, c := range perms.Permutations(len(numbers)) {
+	for _, c := range perms.Permutations(len(operands)) {
 		var currentCombi []int
 
 		for _, x := range c {
-			currentCombi = append(currentCombi, numbers[x])
+			currentCombi = append(currentCombi, operands[x])
 		}
 
 		if len(c) == 1 {
 			continue
 		}
-		operatorPerms := perms.Combrep(len(currentCombi)-1, ops)
+
+		// there is always one fewer operator than operands
+		numberOfOperators := len(currentCombi) - 1
+		operatorPerms := perms.PermRep(numberOfOperators, ops)
 
 		for _, opGroups := range operatorPerms {
 
@@ -76,8 +97,6 @@ func SolveJSON(numbers []string) (string, error) {
 
 	var castedNumbers []int
 
-	// TODO: Handle invalid numbers length here
-
 	for _, n := range numbers {
 		cast, err := strconv.ParseInt(n, 10, 64)
 
@@ -94,10 +113,33 @@ func SolveJSON(numbers []string) (string, error) {
 
 	a, d, err := Solve(castedNumbers, target)
 
-	// TODO
-	_, _ = d, err
+	// error response
+	if err != nil {
+		e := failure{err.Error()}
 
-	s := a.string() + " = " + strconv.Itoa(a.total())
+		b, err := json.Marshal(e)
+		if err != nil {
+			return "", fmt.Errorf("failed to marshal JSON: %v", err)
+		}
 
-	return s, nil
+		return string(b), nil
+	}
+
+	result := a.total()
+
+	// success response
+	s := success{
+		target == result,
+		a.string(),
+		result,
+		0,
+		d.String(),
+	}
+
+	b, err := json.MarshalIndent(s, "", "   ")
+	if err != nil {
+		return "", fmt.Errorf("failed to marshal JSON: %v", err)
+	}
+
+	return string(b), nil
 }
