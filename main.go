@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"runtime/pprof"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -16,6 +18,14 @@ const (
 )
 
 func main() {
+
+	f, err := os.Create("test.prof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(f)
+	defer pprof.StopCPUProfile()
+
 	if err := letters.ReadDict(dictionaryFile); err != nil {
 		log.Fatalf("couldn't read dictionary file %q: %v", dictionaryFile, err)
 	}

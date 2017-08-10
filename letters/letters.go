@@ -89,6 +89,12 @@ func Solve(l string) ([]string, time.Duration, error) {
 				l, maxWordLen)
 	}
 
+	if len(letters) < minWordLen {
+		return top, duration,
+			fmt.Errorf("%v is too short. The minimum number of letters is %v",
+				l, minWordLen)
+	}
+
 	guesses := []string{}
 
 	for _, c := range combi.Combinations(len(letters)) {
@@ -117,7 +123,7 @@ func Solve(l string) ([]string, time.Duration, error) {
 		}
 	}
 
-	// Sort by word length so we can take the best answers
+	// Sort by word length so we can take the "top" answers
 	sort.Sort(a)
 
 	top = a.Top(maxAnswers)

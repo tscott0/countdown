@@ -9,12 +9,14 @@ func (a answers) Len() int      { return len(a.words) }
 func (a answers) Swap(i, j int) { a.words[i], a.words[j] = a.words[j], a.words[i] }
 
 // Less first compares by string length and then alphabetically
+// Uses greater than comparisons to reverse the sorting, ensuring
+// that longest words are first in the array.
 func (a answers) Less(i, j int) bool {
 	if len(a.words[i]) == len(a.words[j]) {
-		return a.words[i] < a.words[j]
+		return a.words[i] > a.words[j]
 	}
 
-	return len(a.words[i]) < len(a.words[j])
+	return len(a.words[i]) > len(a.words[j])
 }
 
 func (a *answers) Insert(w string) {
@@ -30,5 +32,5 @@ func (a answers) Top(n int) []string {
 	if len(a.words) < n {
 		return a.words
 	}
-	return a.words[len(a.words)-n:]
+	return a.words[:n]
 }
